@@ -27,7 +27,6 @@ Main:
   @ We'll blink LED LD3 (the orange LED)
   
 
-
   @ have 1 LED turn on, flash LED around clock in clockwise pattern until reach non flashing LED, 
   @ push button on LED if correct flash green and move onto next level, if not flash red and repeat level 
  
@@ -38,17 +37,29 @@ Main:
   ORR     R5, R5, #(0b1 << (RCC_AHBENR_GPIOEEN_BIT))
   STR     R5, [R4]
 
-  @ Configure LD3 for output
-  @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
-  @   (by BIClearing then ORRing)
-  LDR     R4, =GPIOE_MODER
-  LDR     R5, [R4]                    @ Read ...
-  BIC     R5, #(0b11<<(LD3_PIN*2))    @ Modify ...
-  ORR     R5, #(0b01<<(LD3_PIN*2))    @ write 01 to bits 
-  STR     R5, [R4]                    @ Write 
+  @ Initialise the first countdown
+  LDR     R4, =blink_countdown
+  LDR     R5, =game_speed
+  STR     R5, [R4]  
 
-  .equ currentPin, LD3_PIN
-  BL enableLED
+  @ Configure SysTick Timer to generate an interrupt every 1ms
+  LDR     R4, =SCB_ICSR               @ Clear any pre-existing interrupts
+  LDR     R5, =SCB_ICSR_PENDSTCLR     @
+  STR     R5, [R4]                    @
+  LDR     R4, =SYSTICK_CSR            @ Stop SysTick timer
+  LDR     R5, =0                      @   by writing 0 to CSR
+  STR     R5, [R4]                    @   CSR is the Control and Status Register
+  LDR     R4, =SYSTICK_LOAD           @ Set SysTick LOAD for 1ms delay
+  LDR     R5, =7999                   @ Assuming 8MHz clock
+  STR     R5, [R4]                    @ 
+  LDR     R4, =SYSTICK_VAL            @   Reset SysTick internal counter to 0
+  LDR     R5, =0x1                    @     by writing any value
+  STR     R5, [R4]
+  LDR     R4, =SYSTICK_CSR            @   Start SysTick timer by setting CSR to 0x7
+  LDR     R5, =0x7                    @     set CLKSOURCE (bit 2) to system clock (1)
+  STR     R5, [R4]                    @     set TICKINT (bit 1) to 1 to enable interrupts
+                                      @     set ENABLE (bit 0) to 1
+
 
   @ Configure all other LD for output 
 
@@ -101,41 +112,13 @@ Main:
   ORR     R5, #(0b01<<(LD4_PIN*2))    @ write 01 to bits 
   STR     R5, [R4]                    @ Write 
  */
-  @ Initialise the first countdown
-
-  LDR     R4, =blink_countdown
-  LDR     R5, =BLINK_PERIOD
-  STR     R5, [R4]  
-
-  @ Configure SysTick Timer to generate an interrupt every 1ms
-
-  LDR     R4, =SCB_ICSR               @ Clear any pre-existing interrupts
-  LDR     R5, =SCB_ICSR_PENDSTCLR     @
-  STR     R5, [R4]                    @
-
-  LDR     R4, =SYSTICK_CSR            @ Stop SysTick timer
-  LDR     R5, =0                      @   by writing 0 to CSR
-  STR     R5, [R4]                    @   CSR is the Control and Status Register
-  
-  LDR     R4, =SYSTICK_LOAD           @ Set SysTick LOAD for 1ms delay
-  LDR     R5, =7999                   @ Assuming 8MHz clock
-  STR     R5, [R4]                    @ 
-
-  LDR     R4, =SYSTICK_VAL            @   Reset SysTick internal counter to 0
-  LDR     R5, =0x1                    @     by writing any value
-  STR     R5, [R4]
-
-  LDR     R4, =SYSTICK_CSR            @   Start SysTick timer by setting CSR to 0x7
-  LDR     R5, =0x7                    @     set CLKSOURCE (bit 2) to system clock (1)
-  STR     R5, [R4]                    @     set TICKINT (bit 1) to 1 to enable interrupts
-                                      @     set ENABLE (bit 0) to 1
 
 
   @
   @ Prepare external interrupt Line 0 (USER pushbutton)
   @ We'll count the number of times the button is pressed
   @
-
+/*
   @ Initialise count to zero
   LDR   R4, =button_count             @ count = 0;
   MOV   R5, #0                        @
@@ -155,6 +138,7 @@ Main:
 
   LDR   R4, =current_highlighted_LED
   MOV   R5, #1
+  */
 
   @ Configure USER pushbutton (GPIO Port A Pin 0 on STM32F3 Discovery
   @   kit) to use the EXTI0 external interrupt signal
@@ -183,28 +167,28 @@ Main:
   STR     R5, [R4]
 
 
-  MOV R6, #0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     MAIN      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  MOV R6, #3
 .equ currentPin, LD3
   BL enableLED
-
-
 
   CMP R6, #1
   BLS End_Main
   .equ currentPin, LD3_PIN
   BL enableLED
 
-    CMP R6, #2
+  CMP R6, #2
   BLS End_Main
   .equ currentPin, LD4_PIN
   BL enableLED
 
-    CMP R6, #3
+  CMP R6, #3
   BLS End_Main
   .equ currentPin, LD5_PIN
   BL enableLED
 
-    CMP R6, #4
+  CMP R6, #4
   BLS End_Main
   .equ currentPin, LD6_PIN
   BL enableLED
@@ -213,6 +197,7 @@ Main:
 
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Idle_Loop:
   B     Idle_Loop
   
@@ -225,7 +210,7 @@ End_Main:
   .type  SysTick_Handler, %function
 SysTick_Handler:
 
-  PUSH  {R1,R4, R5, LR}
+  PUSH  {R4, R5, LR}
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -273,9 +258,16 @@ SysTick_Handler:
   B .Lskip
 
 .Lskip:
- 
+  CMP R5, #(0b1<<(currentPin))
+  BEQ .LflashOn
+  LDR R4, = blink_countdown
+  LDR R5, = game_speed_countdown
+  STR R5, [R4]
+  B .LendIfDelay
+
+.LflashOn:
   LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
-  LDR     R5, =BLINK_PERIOD         @
+  LDR     R5, =game_speed           @
   STR     R5, [R4]                  @
 
 .LendIfDelay:                       @ }
@@ -286,8 +278,6 @@ SysTick_Handler:
 
   @ Return from interrupt handler
   POP  {r1, R4, R5, PC}
-
-
 
 @
 @ External interrupt line 0 interrupt handler
