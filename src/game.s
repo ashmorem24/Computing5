@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 250
+  .equ    game_speed, 500
 
   .section .text
 
@@ -104,7 +104,6 @@ Main:
   @ Initialise the first countdown
 
   LDR     R4, =blink_countdown
-  LDR     R5, =BLINK_PERIOD
   STR     R5, [R4]  
 
   @ Configure SysTick Timer to generate an interrupt every 1ms
@@ -140,10 +139,6 @@ Main:
   LDR   R4, =button_count             @ count = 0;
   MOV   R5, #0                        @
   STR   R5, [R4]                      @
-
-  LDR   R4, =game_speed
-  MOV   R5, #500
-  STR   R5, [R4]
 
   LDR   R4, =game_speed_countdown
   MOV   R5, #500
@@ -239,11 +234,51 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
-  CMP R3, #1
-  BEQ .LRedLED
-  CMP R1, #1
-  BEQ .LGreenLED
-  B .Lskip
+  LDR   R4, =current_LED_rotate
+  LDR   R5, [R4]
+  CMP   R5, #1
+  BNE   .Lcheck2
+  // enable led 1
+  B      LContinueGame
+.Lcheck2
+  CMP   R5, #2
+  BNE   .Lcheck3
+  // enable led 2
+  B      LContinueGame
+.Lcheck3
+  CMP   R5, #3
+  BNE   .Lcheck4
+  // enable led 3
+  B      LContinueGame
+.Lcheck4
+  CMP   R5, #4
+  BNE   .Lcheck5
+  // enable led 4
+  B      LContinueGame
+.Lcheck5
+  CMP   R5, #5
+  BNE   .Lcheck6
+  // enable led 5
+  B      LContinueGame
+.Lcheck6
+  CMP   R5, #6
+  BNE   .Lcheck7
+  // enable led 6
+  B      LContinueGame
+.Lcheck7
+  CMP   R5, #7
+  BNE   .Lcheck8
+  // enable led 7
+  B      LContinueGame
+.Lcheck8
+  CMP   R5, #8
+  BNE   .LuserMissedLEDs
+  // enable led 8
+  B      LContinueGame
+
+.LuserMissedLEDs:
+
+// if this code is running the user should have lost, maybe put the code for the red leds here
 
 .LRedLED:                           @ if lost flash red and repeat level 
   LDR     R4, =GPIOE_ODR            @   Invert LD3
@@ -258,24 +293,32 @@ SysTick_Handler:
   MOV R3, #0
   B .Lskip
 
-  @ Green LEDs
-.LGreenLED:                         @ if won flash green
-  LDR     R4, =GPIOE_ODR            @   Invert LD7
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
-  STR     R5, [R4]                  @ 
+.LContinueGame:
 
-  LDR     R4, =GPIOE_ODR            @   Invert LD6
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
-  STR     R5, [R4]                  @ 
-  MOV R1, #0
-  B .Lskip
+@   @ Green LEDs
+@ .LGreenLED:                         @ if won flash green
+@   LDR     R4, =GPIOE_ODR            @   Invert LD7
+@   LDR     R5, [R4]                  @
+@   EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
+@   STR     R5, [R4]                  @ 
 
-.Lskip:
+@   LDR     R4, =GPIOE_ODR            @   Invert LD6
+@   LDR     R5, [R4]                  @
+@   EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
+@   STR     R5, [R4]                  @ 
+@   MOV R1, #0
+@   B .Lskip
+
+@ .Lskip:
+
+
+  LDR   R4, =current_LED_rotate       // increment the current led by 1
+  LDR   R5, [R4]    
+  ADD   R5, R5, #1                  
+  STR   R5, [R4]     
  
-  LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
-  LDR     R5, =BLINK_PERIOD         @
+  LDR     R4, =game_speed_countdown      @   countdown = BLINK_PERIOD;
+  LDR     R5, =game_speed              @
   STR     R5, [R4]                  @
 
 .LendIfDelay:                       @ }
@@ -340,9 +383,6 @@ button_count:
 
 blink_countdown:
   .space  4
-
-game_speed:
-  .space 4
 
 game_speed_countdown:
   .space 4
