@@ -286,6 +286,36 @@ EXTI0_IRQHandler:
 
 
   .section .data
+
+
+/*******************************Subroutines & Interrupts **********************/
+
+
+
+
+
+
+
+
+
+  @ enableLed subroutine:
+
+  @ enables the desired LED for output
+  @ parameters: 
+  @   currentPin
+
+
+enableLED:
+  @  Configure LD3 for output
+  @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
+  @   (by BIClearing then ORRing)
+  PUSH    {R4-R5,LR}
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
+  ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+  POP    {R4-R5,PC}
   
 button_count:
   .space  4
