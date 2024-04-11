@@ -21,13 +21,13 @@
 Main:
   PUSH  {R4-R5,LR}
 
-
+  MOV R1, #1
   @
   @ Prepare GPIO Port E Pin 9 for output (LED LD3)
   @ We'll blink LED LD3 (the orange LED)
   @
 
-  @ Enable GPIO port E by enabling its clock
+  @ Enable GPIO port E by enabling its clock       
   LDR     R4, =RCC_AHBENR
   LDR     R5, [R4]
   ORR     R5, R5, #(0b1 << (RCC_AHBENR_GPIOEEN_BIT))
@@ -40,6 +40,57 @@ Main:
   LDR     R5, [R4]                    @ Read ...
   BIC     R5, #(0b11<<(LD3_PIN*2))    @ Modify ...
   ORR     R5, #(0b01<<(LD3_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+
+  @ Configure all other LD for output 
+
+
+  //my code     // LD5
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD5_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD5_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+
+  
+                // LD 7
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD7_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD7_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write
+  
+                // LD9
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD9_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD9_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+                // LD10
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD10_PIN*2))   @ Modify ...
+  ORR     R5, #(0b01<<(LD10_PIN*2))   @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+                // LD8
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD8_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD8_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+  
+                // LD6
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD6_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD6_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+    
+                // LD4
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD4_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD4_PIN*2))    @ write 01 to bits 
   STR     R5, [R4]                    @ Write 
 
   @ Initialise the first countdown
@@ -108,6 +159,7 @@ Main:
   MOV     R5, #(1<<6)
   STR     R5, [R4]
 
+
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
 Idle_Loop:
@@ -116,15 +168,13 @@ Idle_Loop:
 End_Main:
   POP   {R4-R5,PC}
 
-
-
 @
 @ SysTick interrupt handler (blink LED LD3)
 @
   .type  SysTick_Handler, %function
 SysTick_Handler:
 
-  PUSH  {R4, R5, LR}
+  PUSH  {R1,R4, R5, LR}
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -138,11 +188,62 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
+  CMP R3, #1
+  BEQ .LRedLED
+  CMP R1, #1
+  BEQ .LGreenLED
+  B .Lskip
+.LRedLED:
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
+  STR     R5, [R4]                  @ 
+  MOV R3, #0
+  B .Lskip
+
+  @ Green LEDs
+.LGreenLED:
+  LDR     R4, =GPIOE_ODR            @   Invert LD7
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
   STR     R5, [R4]                  @ 
 
+  LDR     R4, =GPIOE_ODR            @   Invert LD6
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
+  STR     R5, [R4]                  @ 
+  MOV R1, #0
+  B .Lskip
+
+.Lskip:
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD5
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD5_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD5_PIN);
+  STR     R5, [R4]                  @ 
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD9
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD9_PIN);
+  STR     R5, [R4]                  @ 
+
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD8
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD8_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD8_PIN);
+  STR     R5, [R4]                  @ 
+
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD4
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD4_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD4_PIN);
+  STR     R5, [R4]                  @ 
+ 
   LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
   LDR     R5, =BLINK_PERIOD         @
   STR     R5, [R4]                  @
@@ -154,7 +255,7 @@ SysTick_Handler:
   STR     R5, [R4]                  @
 
   @ Return from interrupt handler
-  POP  {R4, R5, PC}
+  POP  {r1,R4, R5, PC}
 
 
 
