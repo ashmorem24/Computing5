@@ -136,6 +136,21 @@ Main:
   MOV   R5, #0                        @
   STR   R5, [R4]                      @
 
+  LDR   R4, =game_speed
+  MOV   R5, #500
+  STR   R5, [R4]
+
+  LDR   R4, =game_speed_countdown
+  MOV   R5, #500
+  STR   R5, [R4]
+
+  LDR   R4, =current_LED_rotate
+  MOV   R5, #1
+  STR   R5, [R4]
+
+  LDR   R4, =current_highlighted_LED
+  MOV   R5, #1
+
   @ Configure USER pushbutton (GPIO Port A Pin 0 on STM32F3 Discovery
   @   kit) to use the EXTI0 external interrupt signal
   @ Determined by bits 3..0 of the External Interrrupt Control
@@ -290,14 +305,6 @@ EXTI0_IRQHandler:
 
 /*******************************Subroutines & Interrupts **********************/
 
-
-
-
-
-
-
-
-
   @ enableLed subroutine:
 
   @ enables the desired LED for output
@@ -322,5 +329,17 @@ button_count:
 
 blink_countdown:
   .space  4
+
+game_speed:
+  .space 4
+
+game_speed_countdown:
+  .space 4
+
+current_LED_rotate:
+  .space 4
+
+current_highlighted_LED:
+  .space 4
 
   .end
