@@ -194,7 +194,7 @@ SysTick_Handler:
 
   PUSH  {R1,R4, R5, LR}
 
-  LDR   R4, =blink_countdown        @ if (countdown != 0) {
+  LDR   R4, =game_speed_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
   CMP   R5, #0                      @
   BEQ   .LelseFire                  @
