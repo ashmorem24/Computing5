@@ -26,6 +26,9 @@ Main:
   @ Prepare GPIO Port E Pin 9 for output (LED LD3)
   @ We'll blink LED LD3 (the orange LED)
   @
+  @ have 1 LED turn on, flash LED around clock in clockwise pattern until reach non flashing LED, 
+  @ push button on LED if correct flash green and move onto next level, if not flash red and repeat level 
+ 
 
   @ Enable GPIO port E by enabling its clock       
   LDR     R4, =RCC_AHBENR
@@ -44,7 +47,7 @@ Main:
 
   @ Configure all other LD for output 
 
-
+  
   //my code     // LD5
   LDR     R4, =GPIOE_MODER
   LDR     R5, [R4]                    @ Read ...
@@ -193,7 +196,8 @@ SysTick_Handler:
   CMP R1, #1
   BEQ .LGreenLED
   B .Lskip
-.LRedLED:
+
+.LRedLED:                           @ if lost flash red and repeat level 
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
@@ -207,7 +211,7 @@ SysTick_Handler:
   B .Lskip
 
   @ Green LEDs
-.LGreenLED:
+.LGreenLED:                         @ if won flash green
   LDR     R4, =GPIOE_ODR            @   Invert LD7
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
