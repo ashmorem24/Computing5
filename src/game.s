@@ -63,7 +63,7 @@ Main:
 
   @ Configure all other LD for output 
 
-/*
+
   //my code     // LD5
   LDR     R4, =GPIOE_MODER
   LDR     R5, [R4]                    @ Read ...
@@ -111,14 +111,14 @@ Main:
   BIC     R5, #(0b11<<(LD4_PIN*2))    @ Modify ...
   ORR     R5, #(0b01<<(LD4_PIN*2))    @ write 01 to bits 
   STR     R5, [R4]                    @ Write 
- */
+ 
 
 
   @
   @ Prepare external interrupt Line 0 (USER pushbutton)
   @ We'll count the number of times the button is pressed
   @
-/*
+
   @ Initialise count to zero
   LDR   R4, =button_count             @ count = 0;
   MOV   R5, #0                        @
@@ -134,7 +134,7 @@ Main:
 
   LDR   R4, =current_highlighted_LED
   MOV   R5, #1
-  */
+  
 
   @ Configure USER pushbutton (GPIO Port A Pin 0 on STM32F3 Discovery
   @   kit) to use the EXTI0 external interrupt signal
@@ -174,20 +174,20 @@ Main:
   .equ currentPin, LD3_PIN
   BL enableLED
 
-  CMP R6, #2
-  BLS End_Main
-  .equ currentPin, LD4_PIN
-  BL enableLED
+  @ CMP R6, #2
+  @ BLS End_Main
+  @ .equ currentPin, LD4_PIN
+  @ BL enableLED
 
-  CMP R6, #3
-  BLS End_Main
-  .equ currentPin, LD5_PIN
-  BL enableLED
+  @ CMP R6, #3
+  @ BLS End_Main
+  @ .equ currentPin, LD5_PIN
+  @ BL enableLED
 
-  CMP R6, #4
-  BLS End_Main
-  .equ currentPin, LD6_PIN
-  BL enableLED
+  @ CMP R6, #4
+  @ BLS End_Main
+  @ .equ currentPin, LD6_PIN
+  @ BL enableLED
 
 
 
@@ -213,6 +213,7 @@ SysTick_Handler:
   CMP   R5, #0                      @
   BEQ   .LelseFire                  @
 
+
   SUB   R5, R5, #1                  @   countdown = countdown - 1;
   STR   R5, [R4]                    @
 
@@ -225,42 +226,58 @@ SysTick_Handler:
   CMP   R5, #1
   BNE   .Lcheck2
   // enable led 1
-  B      LContinueGame
-.Lcheck2
+  .equ currentLED,LD3_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck2:
   CMP   R5, #2
   BNE   .Lcheck3
   // enable led 2
-  B      LContinueGame
-.Lcheck3
+    .equ currentLED,LD5_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck3:
   CMP   R5, #3
   BNE   .Lcheck4
   // enable led 3
-  B      LContinueGame
-.Lcheck4
+    .equ currentLED,LD7_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck4:
   CMP   R5, #4
   BNE   .Lcheck5
   // enable led 4
-  B      LContinueGame
-.Lcheck5
+    .equ currentLED,LD9_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck5:
   CMP   R5, #5
   BNE   .Lcheck6
   // enable led 5
-  B      LContinueGame
-.Lcheck6
+    .equ currentLED,LD10_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck6:
   CMP   R5, #6
   BNE   .Lcheck7
   // enable led 6
-  B      LContinueGame
-.Lcheck7
+    .equ currentLED,LD8_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck7:
   CMP   R5, #7
   BNE   .Lcheck8
   // enable led 7
-  B      LContinueGame
-.Lcheck8
+    .equ currentLED,LD6_PIN
+  BL enableLED
+  B      .LContinueGame
+.Lcheck8:
   CMP   R5, #8
   BNE   .LuserMissedLEDs
   // enable led 8
-  B      LContinueGame
+    .equ currentLED,LD4_PIN
+  BL enableLED
+  B      .LContinueGame
 
 .LuserMissedLEDs:
 
@@ -295,7 +312,7 @@ SysTick_Handler:
 @   MOV R1, #0
 @   B .Lskip
 
-@ .Lskip:
+ .Lskip:
 
 
   LDR   R4, =current_LED_rotate       // increment the current led by 1
@@ -314,8 +331,29 @@ SysTick_Handler:
   STR     R5, [R4]                  @
 
   @ Return from interrupt handler
-  POP  {r1, R4, R5, PC}
+  POP  { R4, R5, PC}
 
+/* Subroutines & Interrupts */
+
+  @ enableLed subroutine:
+
+  @ enables the desired LED for output
+  @ parameters: 
+  @   currentPin
+
+
+enableLED:
+  @  Configure LD3 for output
+  @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
+  @   (by BIClearing then ORRing)
+  PUSH    {R4-R5,LR}
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                       @ Read ...
+  BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
+  ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
+  STR     R5, [R4]                       @ Write 
+  POP    {R4-R5,PC}
+  
 @
 @ External interrupt line 0 interrupt handler
 @   (count button presses)
@@ -338,30 +376,10 @@ EXTI0_IRQHandler:
   POP  {R4,R5,PC}
 
 
+
+
   .section .data
 
-
-/*******************************Subroutines & Interrupts **********************/
-
-  @ enableLed subroutine:
-
-  @ enables the desired LED for output
-  @ parameters: 
-  @   currentPin
-
-
-enableLED:
-  @  Configure LD3 for output
-  @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
-  @   (by BIClearing then ORRing)
-  PUSH    {R4-R5,LR}
-  LDR     R4, =GPIOE_MODER
-  LDR     R5, [R4]                       @ Read ...
-  BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
-  ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
-  STR     R5, [R4]                       @ Write 
-  POP    {R4-R5,PC}
-  
 button_count:
   .space  4
 
