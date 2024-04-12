@@ -285,7 +285,10 @@ SysTick_Handler:
   MOV R4, LD4_PIN
   BL .LtoggleLED8
   B      .LContinueGame
-
+.Lcheck9:
+  CMP   R5, #9
+  BNE   .LuserMissedLEDs
+  B      .LContinueGame
 .LuserMissedLEDs:
 
 // if this code is running the user should have lost, maybe put the code for the red leds here
@@ -324,7 +327,7 @@ SysTick_Handler:
 
 
 @ .equ currentPin, LD4_PIN
-BL  enableLED
+@ BL  enableLED
 
 .LContinueGame:
 /*
