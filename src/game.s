@@ -63,6 +63,12 @@ Main:
 
   @ Configure all other LD for output 
 
+  LDR     R4, =GPIOE_MODER
+  LDR     R5, [R4]                    @ Read ...
+  BIC     R5, #(0b11<<(LD3_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD3_PIN*2))    @ write 01 to bits 
+  STR     R5, [R4]                    @ Write 
+
 
   //my code     // LD5
   LDR     R4, =GPIOE_MODER
@@ -166,27 +172,27 @@ Main:
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     MAIN      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   MOV R6, #3
-.equ currentPin, LD3
-  BL enableLED
+
+  //BL enableLED
 
   CMP R6, #1
   BLS End_Main
-  .equ currentPin, LD3_PIN
-  BL enableLED
+  @.equ currentPin, LD3_PIN
+  //BL enableLED
 
   @ CMP R6, #2
   @ BLS End_Main
-  @ .equ currentPin, LD4_PIN
+
   @ BL enableLED
 
   @ CMP R6, #3
   @ BLS End_Main
-  @ .equ currentPin, LD5_PIN
+
   @ BL enableLED
 
   @ CMP R6, #4
   @ BLS End_Main
-  @ .equ currentPin, LD6_PIN
+
   @ BL enableLED
 
 
@@ -225,58 +231,55 @@ SysTick_Handler:
   LDR   R5, [R4]
   CMP   R5, #1
   BNE   .Lcheck2
-  // enable led 1
-  .equ currentLED,LD3_PIN
-  BL enableLED
+  MOV R4, #LD3_PIN
+
+  BL .LtoggleLED
   B      .LContinueGame
+  
 .Lcheck2:
   CMP   R5, #2
   BNE   .Lcheck3
-  // enable led 2
-    .equ currentLED,LD5_PIN
-  BL enableLED
+  MOV R4, LD5_PIN
+
+  BL .LtoggleLED2
   B      .LContinueGame
 .Lcheck3:
   CMP   R5, #3
   BNE   .Lcheck4
-  // enable led 3
-    .equ currentLED,LD7_PIN
-  BL enableLED
+  MOV R4, LD7_PIN
+
+  BL .LtoggleLED3
   B      .LContinueGame
 .Lcheck4:
   CMP   R5, #4
   BNE   .Lcheck5
-  // enable led 4
-    .equ currentLED,LD9_PIN
-  BL enableLED
+  MOV R4, LD9_PIN
+
+  BL .LtoggleLED4
   B      .LContinueGame
 .Lcheck5:
   CMP   R5, #5
   BNE   .Lcheck6
-  // enable led 5
-    .equ currentLED,LD10_PIN
-  BL enableLED
+  MOV R4, LD10_PIN
+  BL .LtoggleLED5
   B      .LContinueGame
 .Lcheck6:
   CMP   R5, #6
   BNE   .Lcheck7
-  // enable led 6
-    .equ currentLED,LD8_PIN
-  BL enableLED
+  MOV R4, LD8_PIN
+  BL .LtoggleLED6
   B      .LContinueGame
 .Lcheck7:
   CMP   R5, #7
   BNE   .Lcheck8
-  // enable led 7
-    .equ currentLED,LD6_PIN
-  BL enableLED
+  MOV R4, LD6_PIN
+  BL .LtoggleLED7
   B      .LContinueGame
 .Lcheck8:
   CMP   R5, #8
   BNE   .LuserMissedLEDs
-  // enable led 8
-    .equ currentLED,LD4_PIN
-  BL enableLED
+  MOV R4, LD4_PIN
+  BL .LtoggleLED8
   B      .LContinueGame
 
 .LuserMissedLEDs:
@@ -293,26 +296,60 @@ SysTick_Handler:
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
   STR     R5, [R4]                  @ 
-  MOV R3, #0
+
+  B .Lskip
+  
+  @ Green LEDs
+.LGreenLED:                         @ if won flash green
+  LDR     R4, =GPIOE_ODR            @   Invert LD7
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
+  STR     R5, [R4]                  @ 
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD6
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
+  STR     R5, [R4]                  @ 
+  MOV R1, #0
   B .Lskip
 
+
 .LContinueGame:
+/*
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD5_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+    LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+    LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+    LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD8_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+    LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+    LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD4_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+*/
 
-@   @ Green LEDs
-@ .LGreenLED:                         @ if won flash green
-@   LDR     R4, =GPIOE_ODR            @   Invert LD7
-@   LDR     R5, [R4]                  @
-@   EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
-@   STR     R5, [R4]                  @ 
-
-@   LDR     R4, =GPIOE_ODR            @   Invert LD6
-@   LDR     R5, [R4]                  @
-@   EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
-@   STR     R5, [R4]                  @ 
-@   MOV R1, #0
-@   B .Lskip
-
- .Lskip:
 
 
   LDR   R4, =current_LED_rotate       // increment the current led by 1
@@ -320,6 +357,9 @@ SysTick_Handler:
   ADD   R5, R5, #1                  
   STR   R5, [R4]     
  
+ 
+ .Lskip:
+
   LDR     R4, =game_speed_countdown      @   countdown = BLINK_PERIOD;
   LDR     R5, =game_speed              @
   STR     R5, [R4]                  @
@@ -334,6 +374,152 @@ SysTick_Handler:
   POP  { R4, R5, PC}
 
 /* Subroutines & Interrupts */
+.LtoggleLED:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD3_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+
+
+  @BL delay
+    POP     {R4-R6, PC}
+
+.LtoggleLED2:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD5_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+
+  @BL delay
+    POP     {R4-R6, PC}
+
+  .LtoggleLED3:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD7_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+  @BL delay
+    POP     {R4-R6, PC}
+
+  .LtoggleLED4:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD9_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+  @BL delay
+  POP     {R4-R6, PC}
+
+  .LtoggleLED5:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD10_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+  @BL delay
+    POP     {R4-R6, PC}
+
+  .LtoggleLED6:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD8_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+  @BL delay
+    POP     {R4-R6, PC}
+
+  .LtoggleLED7:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD6_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+  
+  @BL delay
+    POP     {R4-R6, PC}
+
+  .LtoggleLED8:
+PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
+
+  MOV R6, #1
+  LSL     R6, R6, LD4_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+.LtoggleLED9:
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD5_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD5_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
+  STR     R5, [R4]                  @ 
+
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD9_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD8_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD8_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
+  STR     R5, [R4]                  @ 
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  EOR     R5, #(0b1<<(LD4_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD4_PIN);
+  STR     R5, [R4]                  @ 
+  
+
+
+  POP     {R4-R6, PC}
+
+
+delay:
+  MOV R6, #0x200000
+.LdelayLoop:
+  SUBS R6,R6,#1
+  BNE .LdelayLoop
 
   @ enableLed subroutine:
 
@@ -342,18 +528,30 @@ SysTick_Handler:
   @   currentPin
 
 
+@ enableLED:
+@   @  Configure LD3 for output
+@   @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
+@   @   (by BIClearing then ORRing)
+@   PUSH    {R4-R5,LR}
+@   LDR     R4, =GPIOE_MODER
+@   LDR     R5, [R4]                       @ Read ...
+@   BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
+@   ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
+@   STR     R5, [R4]                       @ Write 
+@   POP    {R4-R5,PC}
+
+/*
 enableLED:
-  @  Configure LD3 for output
-  @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
-  @   (by BIClearing then ORRing)
+
   PUSH    {R4-R5,LR}
-  LDR     R4, =GPIOE_MODER
-  LDR     R5, [R4]                       @ Read ...
-  BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
-  ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
+  LDR     R4, =GPIOE_ODR
+  LDR     R5, [R4]                        @ Read ...
+  BIC     R5, #(0b11<<(8))          @ Modify ...
+  ORR     R5, #(0b01<<(8*2))        @ write 01 to bits 
   STR     R5, [R4]                       @ Write 
   POP    {R4-R5,PC}
-  
+   */
+
 @
 @ External interrupt line 0 interrupt handler
 @   (count button presses)
@@ -376,9 +574,9 @@ EXTI0_IRQHandler:
   POP  {R4,R5,PC}
 
 
-
-
   .section .data
+
+
 
 button_count:
   .space  4
