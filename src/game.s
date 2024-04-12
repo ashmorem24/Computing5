@@ -15,6 +15,7 @@
   .include "./src/definitions.s"
 
   .equ    game_speed, 1000
+  .equ    rand, 358725982
 
   .section .text
 
@@ -139,10 +140,10 @@ Main:
   STR   R5, [R4]
 
   LDR   R4, =current_highlighted_LED
-  MOV   R5, #1
+  MOV   R5, #6
   STR   R5, [R4]
 
-  LDR   R4, =currentPin
+  LDR   R4, =currentLED
   MOV   R5, #1
   STR   R5, [R4]
 
@@ -175,12 +176,6 @@ Main:
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     MAIN      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  MOV R6, #3
-
-  //BL enableLED
-
-  CMP R6, #1
-  BLS End_Main
   @.equ currentPin, LD3_PIN
   //BL enableLED
 
@@ -203,6 +198,8 @@ Main:
 
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
+
+  BL .LtoggleLED6
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Idle_Loop:
   B     Idle_Loop
@@ -235,54 +232,80 @@ SysTick_Handler:
   LDR   R5, [R4]
   CMP   R5, #1
   BNE   .Lcheck2
-  MOV R4, #LD3_PIN
-
+  LDR   R4, =currentLED
+  LDR   R5, =1
+  STR   R5, [R4]
   BL .LtoggleLED
   B      .LContinueGame
   
 .Lcheck2:
   CMP   R5, #2
   BNE   .Lcheck3
-  MOV R4, LD5_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =2
+  STR   R5, [R4]
 
   BL .LtoggleLED2
   B      .LContinueGame
 .Lcheck3:
   CMP   R5, #3
   BNE   .Lcheck4
-  MOV R4, LD7_PIN
+
+    LDR   R4, =currentLED
+  LDR   R5, =3
+  STR   R5, [R4]
 
   BL .LtoggleLED3
   B      .LContinueGame
 .Lcheck4:
   CMP   R5, #4
   BNE   .Lcheck5
-  MOV R4, LD9_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =4
+  STR   R5, [R4]
 
   BL .LtoggleLED4
   B      .LContinueGame
 .Lcheck5:
   CMP   R5, #5
   BNE   .Lcheck6
-  MOV R4, LD10_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =5
+  STR   R5, [R4]
+
   BL .LtoggleLED5
   B      .LContinueGame
 .Lcheck6:
   CMP   R5, #6
   BNE   .Lcheck7
-  MOV R4, LD8_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =6
+  STR   R5, [R4]
+
   BL .LtoggleLED6
   B      .LContinueGame
 .Lcheck7:
   CMP   R5, #7
   BNE   .Lcheck8
-  MOV R4, LD6_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =7
+  STR   R5, [R4]
+
   BL .LtoggleLED7
   B      .LContinueGame
 .Lcheck8:
   CMP   R5, #8
   BNE   .Lcheck9
-  MOV R4, LD4_PIN
+
+  LDR   R4, =currentLED
+  LDR   R5, =8
+  STR   R5, [R4]
+
   BL .LtoggleLED8
   B      .LContinueGame
 .Lcheck9:
@@ -392,6 +415,7 @@ SysTick_Handler:
 /* Subroutines & Interrupts */
 .LtoggleLED:
 PUSH    {R4-R6, LR}
+
   LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
   LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
 
@@ -495,16 +519,6 @@ PUSH    {R4-R6, LR}
   STR     R5, [R4]
   POP {r4-R6,pc}
 
-.LtoggleLED9:
-  PUSH    {R4-R6, LR}
-  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
-  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
-
-  MOV R6, #1
-  LSL     R6, R6, LD3_PIN
-  ORR     R5, R6
-  STR     R5, [R4]
-
 
 .LtoggleLED10:
   LDR     R4, =GPIOE_ODR            @   Invert LD3
@@ -586,20 +600,32 @@ enableLED:
   .type  EXTI0_IRQHandler, %function
 EXTI0_IRQHandler:
 
-  PUSH  {R4,R5,LR}
+  PUSH  {R0-R12,LR}
 
-  LDR   R4, =button_count           @ count = count + 1
-  LDR   R5, [R4]                    @
-  ADD   R5, R5, #1                  @
-  STR   R5, [R4]                    @
-  
+  @ LDR   R4, =button_count           @ count = count + 1
+  @ LDR   R5, [R4]                    @
+  @ ADD   R5, R5, #1                  @
+  @ STR   R5, [R4]                    @
+
+  LDR   R4, =currentLED
+  LDR   R5, [R4]
+
+  LDR   R6, =current_highlighted_LED
+  LDR   R7, [R5]
+
+  CMP   R7, R5
+  BNE   .LloseGame
+  // code to progress next round here
+
+.LloseGame:
+// code to quit here
 
   LDR   R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
 
   @ Return from interrupt handler
-  POP  {R4,R5,PC}
+  POP  {R0-R12,PC}
 
 
   .section .data
@@ -621,7 +647,7 @@ current_LED_rotate:
 current_highlighted_LED:
   .space 4
 
-currentPin:
+currentLED:
   .space 4
 
   .end
