@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    game_speed, 500
+  .equ    game_speed, 1000
 
   .section .text
 
@@ -140,7 +140,11 @@ Main:
 
   LDR   R4, =current_highlighted_LED
   MOV   R5, #1
-  
+  STR   R5, [R4]
+
+  LDR   R4, =currentPin
+  MOV   R5, #1
+  STR   R5, [R4]
 
   @ Configure USER pushbutton (GPIO Port A Pin 0 on STM32F3 Discovery
   @   kit) to use the EXTI0 external interrupt signal
@@ -289,7 +293,7 @@ SysTick_Handler:
 .LRedLED:                           @ if lost flash red and repeat level 
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                  @
   
   LDR     R4, =GPIOE_ODR            @   Invert LD10
@@ -297,6 +301,11 @@ SysTick_Handler:
   EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
   STR     R5, [R4]                  @ 
 
+  @ LDR     R4, =GPIOE_ODR            @   Invert LD10
+  @ LDR     R5, [R4]                  @
+  @ EOR     R5, #(0b1<<(LD10_PIN))    @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
+  @ STR     R5, [R4]                  @ 
+  MOV R3, #0
   B .Lskip
   
   @ Green LEDs
@@ -313,6 +322,9 @@ SysTick_Handler:
   MOV R1, #0
   B .Lskip
 
+
+@ .equ currentPin, LD4_PIN
+BL  enableLED
 
 .LContinueGame:
 /*
@@ -591,6 +603,9 @@ current_LED_rotate:
   .space 4
 
 current_highlighted_LED:
+  .space 4
+
+currentPin:
   .space 4
 
   .end
