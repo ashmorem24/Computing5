@@ -14,10 +14,23 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    game_speed, 1000
-  .equ    rand, 358725982
 
   .section .text
+
+delay:
+push {R0-R12, LR}
+ldr r4, =ignore_delay
+ldr r5, =1
+str r5, [r4]
+  MOV R6, #0x200000
+.LdelayLoop:
+  SUBS R6,R6,#1
+  BNE .LdelayLoop
+
+ldr r4, =ignore_delay
+ldr r5, =0
+str r5, [r4]
+pop {R0-R12, PC}
 
 Main:
    PUSH  {R4-R5,LR}
@@ -147,6 +160,19 @@ Main:
   MOV   R5, #1
   STR   R5, [R4]
 
+  LDR   R4, =rand
+  LDR   R5, =3137465536
+  STR   R5, [R4]
+
+  ldr r4, =game_speed
+  ldr r5, =1000
+  str r5, [r4]
+
+  ldr r4, =ignore_delay
+  ldr r5, =0
+  str r5, [r4]
+
+
   @ Configure USER pushbutton (GPIO Port A Pin 0 on STM32F3 Discovery
   @   kit) to use the EXTI0 external interrupt signal
   @ Determined by bits 3..0 of the External Interrrupt Control
@@ -176,31 +202,12 @@ Main:
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     MAIN      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  @.equ currentPin, LD3_PIN
-  //BL enableLED
 
-  @ CMP R6, #2
-  @ BLS End_Main
-
-  @ BL enableLED
-
-  @ CMP R6, #3
-  @ BLS End_Main
-
-  @ BL enableLED
-
-  @ CMP R6, #4
-  @ BLS End_Main
-
-  @ BL enableLED
-
-
-
-  @ Nothing else to do in Main
-  @ Idle loop forever (welcome to interrupts!!)
 
   BL .LtoggleLED6
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  BL delay
+  BL LightsOff
+
 Idle_Loop:
   B     Idle_Loop
   
@@ -213,10 +220,15 @@ End_Main:
   .type  SysTick_Handler, %function
 SysTick_Handler:
 
-  PUSH  {R4, R5, LR}
+  PUSH  {R0-r12, LR}
+
+  LDR   R4, =ignore_delay
+  ldr   r5, [r4]
+  CMP   R5, #1
+  BEQ   .LendIfDelay
 
   LDR   R4, =game_speed_countdown        @ if (countdown != 0) {
-  LDR   R5, [R4]                    @
+   LDR   R5, [R4]                    @
   CMP   R5, #0                      @
   BEQ   .LelseFire                  @
 
@@ -228,13 +240,14 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
+  LDR   R6, =currentLED
+
   LDR   R4, =current_LED_rotate
   LDR   R5, [R4]
   CMP   R5, #1
   BNE   .Lcheck2
-  LDR   R4, =currentLED
-  LDR   R5, =1
-  STR   R5, [R4]
+  LDR   R7, =1
+  STR   R7, [R6]
   BL .LtoggleLED
   B      .LContinueGame
   
@@ -242,9 +255,8 @@ SysTick_Handler:
   CMP   R5, #2
   BNE   .Lcheck3
 
-  LDR   R4, =currentLED
-  LDR   R5, =2
-  STR   R5, [R4]
+  LDR   R7, =2
+  STR   R7, [R6]
 
   BL .LtoggleLED2
   B      .LContinueGame
@@ -252,9 +264,8 @@ SysTick_Handler:
   CMP   R5, #3
   BNE   .Lcheck4
 
-    LDR   R4, =currentLED
-  LDR   R5, =3
-  STR   R5, [R4]
+  LDR   R7, =3
+  STR   R7, [R6]
 
   BL .LtoggleLED3
   B      .LContinueGame
@@ -262,9 +273,8 @@ SysTick_Handler:
   CMP   R5, #4
   BNE   .Lcheck5
 
-  LDR   R4, =currentLED
-  LDR   R5, =4
-  STR   R5, [R4]
+  LDR   R7, =4
+  STR   R7, [R6]
 
   BL .LtoggleLED4
   B      .LContinueGame
@@ -272,9 +282,8 @@ SysTick_Handler:
   CMP   R5, #5
   BNE   .Lcheck6
 
-  LDR   R4, =currentLED
-  LDR   R5, =5
-  STR   R5, [R4]
+  LDR   R7, =5
+  STR   R7, [R6]
 
   BL .LtoggleLED5
   B      .LContinueGame
@@ -282,9 +291,8 @@ SysTick_Handler:
   CMP   R5, #6
   BNE   .Lcheck7
 
-  LDR   R4, =currentLED
-  LDR   R5, =6
-  STR   R5, [R4]
+  LDR   R7, =6
+  STR   R7, [R6]
 
   BL .LtoggleLED6
   B      .LContinueGame
@@ -292,9 +300,8 @@ SysTick_Handler:
   CMP   R5, #7
   BNE   .Lcheck8
 
-  LDR   R4, =currentLED
-  LDR   R5, =7
-  STR   R5, [R4]
+  LDR   R7, =7
+  STR   R7, [R6]
 
   BL .LtoggleLED7
   B      .LContinueGame
@@ -302,9 +309,8 @@ SysTick_Handler:
   CMP   R5, #8
   BNE   .Lcheck9
 
-  LDR   R4, =currentLED
-  LDR   R5, =8
-  STR   R5, [R4]
+  LDR   R7, =8
+  STR   R7, [R6]
 
   BL .LtoggleLED8
   B      .LContinueGame
@@ -348,6 +354,7 @@ SysTick_Handler:
 
   LDR     R4, =game_speed_countdown      @   countdown = BLINK_PERIOD;
   LDR     R5, =game_speed              @
+  LDr     R5, [R5]
   STR     R5, [R4]                  @
 
 .LendIfDelay:                       @ }
@@ -357,7 +364,7 @@ SysTick_Handler:
   STR     R5, [R4]                  @
 
   @ Return from interrupt handler
-  POP  { R4, R5, PC}
+  POP  { R0-r12, PC}
 
 /* Subroutines & Interrupts */
 .LtoggleLED:
@@ -503,42 +510,9 @@ PUSH    {R4-R6, LR}
   POP     {R4-R6, PC}
 
 
-delay:
-  MOV R6, #0x200000
-.LdelayLoop:
-  SUBS R6,R6,#1
-  BNE .LdelayLoop
-
-  @ enableLed subroutine:
-
-  @ enables the desired LED for output
-  @ parameters: 
-  @   currentPin
 
 
-@ enableLED:
-@   @  Configure LD3 for output
-@   @   by setting bits 27:26 of GPIOE_MODER to 01 (GPIO Port E Mode Register)
-@   @   (by BIClearing then ORRing)
-@   PUSH    {R4-R5,LR}
-@   LDR     R4, =GPIOE_MODER
-@   LDR     R5, [R4]                       @ Read ...
-@   BIC     R5, #(0b11<<(currentPin*2))    @ Modify ...
-@   ORR     R5, #(0b01<<(currentPin*2))    @ write 01 to bits 
-@   STR     R5, [R4]                       @ Write 
-@   POP    {R4-R5,PC}
 
-/*
-enableLED:
-
-  PUSH    {R4-R5,LR}
-  LDR     R4, =GPIOE_ODR
-  LDR     R5, [R4]                        @ Read ...
-  BIC     R5, #(0b11<<(8))          @ Modify ...
-  ORR     R5, #(0b01<<(8*2))        @ write 01 to bits 
-  STR     R5, [R4]                       @ Write 
-  POP    {R4-R5,PC}
-   */
 
 @
 @ External interrupt line 0 interrupt handler
@@ -580,14 +554,106 @@ EXTI0_IRQHandler:
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
 
+  bl delay
+BL LightsOff
+bl delay
+
   // Reset current led to 1
-      LDR   R4, =currentLED
+LDR   R4, =currentLED
 LDR     r5, =1
 str  r5, [r4]
+
+ldr r4, =current_LED_rotate
+ldr r5, =1
+str r5, [r4]
   // change the highlighted led
-  
+LDR R4, =rand
+LDR R5, [R4]
+ADD R5, R5, #13
+EOR R5, R5, R5,ROR #9
+STR R5, [R4]
+
+LDR r6, =7
+AND R5, R6
+ADD R5, #1
+
+CMP R5, #2
+BHS .lowerBoundGood
+MOV R5, #2
+.lowerBoundGood:
+CMP R5, #7 
+BLS .happy
+MOV R5, #7
+
+.happy:
+
+
+ldr r6, =current_highlighted_LED
+str r5, [r6]
+
+
+
+CMP R5, #1
+BNE .Lch1
+BL .LtoggleLED
+B   .LfH
+
+.Lch1:
+CMP R5, #2
+BNE .Lch2
+BL .LtoggleLED2
+B   .LfH
+
+.Lch2:
+CMP R5, #3
+BNE .Lch3
+BL .LtoggleLED3
+B   .LfH
+
+.Lch3:
+CMP R5, #4
+BNE .Lch4
+BL .LtoggleLED4
+B   .LfH
+
+.Lch4:
+CMP R5, #5
+BNE .Lch5
+BL .LtoggleLED5
+B   .LfH
+
+.Lch5:
+CMP R5, #6
+BNE .Lch6
+BL .LtoggleLED6
+B   .LfH
+
+.Lch6:
+CMP R5, #7
+BNE .Lch7
+BL .LtoggleLED7
+B   .LfH
+
+.Lch7:
+CMP R5, #8
+BNE .LfH
+BL .LtoggleLED8
+
+.LfH:
+
+BL delay
+BL LightsOff
+
   // increase game speed
+  ldr r4, =game_speed
+  ldr r5, [r4]
+  sub r5, #50
+  str r5, [r4]
+
+  ldr r4, =game_speed_countdown
+  str r5, [r4]
   // make sure the game runs again
+
 
   @ Return from interrupt handler
   POP  {R0-R12,PC}
@@ -708,6 +774,15 @@ current_highlighted_LED:
   .space 4
 
 currentLED:
+  .space 4
+
+rand:
+  .space 4
+
+game_speed: 
+  .space 4
+
+ignore_delay:
   .space 4
 
   .end
