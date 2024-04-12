@@ -281,13 +281,14 @@ SysTick_Handler:
   B      .LContinueGame
 .Lcheck8:
   CMP   R5, #8
-  BNE   .LuserMissedLEDs
+  BNE   .Lcheck9
   MOV R4, LD4_PIN
   BL .LtoggleLED8
   B      .LContinueGame
 .Lcheck9:
   CMP   R5, #9
   BNE   .LuserMissedLEDs
+  BL .LtoggleLED10
   B      .LContinueGame
 .LuserMissedLEDs:
 
@@ -296,12 +297,12 @@ SysTick_Handler:
 .LRedLED:                           @ if lost flash red and repeat level 
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                  @
   
   LDR     R4, =GPIOE_ODR            @   Invert LD10
   LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
+  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
   STR     R5, [R4]                  @ 
 
   @ LDR     R4, =GPIOE_ODR            @   Invert LD10
@@ -484,7 +485,7 @@ PUSH    {R4-R6, LR}
     POP     {R4-R6, PC}
 
   .LtoggleLED8:
-PUSH    {R4-R6, LR}
+  PUSH    {R4-R6, LR}
   LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
   LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
 
@@ -492,9 +493,20 @@ PUSH    {R4-R6, LR}
   LSL     R6, R6, LD4_PIN
   ORR     R5, R6
   STR     R5, [R4]
+  POP {r4-R6,pc}
 
 .LtoggleLED9:
+  PUSH    {R4-R6, LR}
+  LDR     R4, =GPIOE_ODR          @ Load address of GPIOE_ODR into R4
+  LDR     R5, [R4]                @ Load value of GPIOE_ODR into R5
 
+  MOV R6, #1
+  LSL     R6, R6, LD3_PIN
+  ORR     R5, R6
+  STR     R5, [R4]
+
+
+.LtoggleLED10:
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD5_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD5_PIN);
@@ -580,6 +592,7 @@ EXTI0_IRQHandler:
   LDR   R5, [R4]                    @
   ADD   R5, R5, #1                  @
   STR   R5, [R4]                    @
+  
 
   LDR   R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
   MOV   R5, #(1<<0)                 @
