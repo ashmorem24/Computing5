@@ -20,7 +20,7 @@
   .section .text
 
 Main:
-  PUSH  {R4-R5,LR}
+   PUSH  {R4-R5,LR}
 
 
   @
@@ -316,79 +316,26 @@ SysTick_Handler:
 .LuserMissedLEDs:
 
 // if this code is running the user should have lost, maybe put the code for the red leds here
-
-.LRedLED:                           @ if lost flash red and repeat level 
-  LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-  
-  LDR     R4, =GPIOE_ODR            @   Invert LD10
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
-  STR     R5, [R4]                  @ 
-
-  @ LDR     R4, =GPIOE_ODR            @   Invert LD10
-  @ LDR     R5, [R4]                  @
-  @ EOR     R5, #(0b1<<(LD10_PIN))    @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
-  @ STR     R5, [R4]                  @ 
-  MOV R3, #0
-  B .Lskip
-  
+  BL    CloseGame
   @ Green LEDs
 .LGreenLED:                         @ if won flash green
-  LDR     R4, =GPIOE_ODR            @   Invert LD7
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
-  STR     R5, [R4]                  @ 
+  @ LDR     R4, =GPIOE_ODR            @   Invert LD7
+  @ LDR     R5, [R4]                  @
+  @ EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD7_PIN);
+  @ STR     R5, [R4]                  @ 
 
-  LDR     R4, =GPIOE_ODR            @   Invert LD6
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
-  STR     R5, [R4]                  @ 
-  MOV R1, #0
-  B .Lskip
+  @ LDR     R4, =GPIOE_ODR            @   Invert LD6
+  @ LDR     R5, [R4]                  @
+  @ EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
+  @ STR     R5, [R4]                  @ 
+  @ MOV R1, #0
+  @ B .Lskip
 
 
 @ .equ currentPin, LD4_PIN
 @ BL  enableLED
 
 .LContinueGame:
-/*
-  LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-  LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD5_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-  LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-    LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD9_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-    LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-    LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD8_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-    LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-    LDR     R4, =GPIOE_ODR            @   Invert LD3
-  LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD4_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
-  STR     R5, [R4]                  @
-*/
-
 
 
   LDR   R4, =current_LED_rotate       // increment the current led by 1
@@ -611,23 +558,136 @@ EXTI0_IRQHandler:
   LDR   R5, [R4]
 
   LDR   R6, =current_highlighted_LED
-  LDR   R7, [R5]
+  LDR   R7, [R6]
 
   CMP   R7, R5
-  BNE   .LloseGame
-  // code to progress next round here
+  BNE   CloseGame
+    // code to progress next round here
+  BL    LightsOff
 
-.LloseGame:
-// code to quit here
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  ORR     R5, #(0b1<<(LD7_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  ORR     R5, #(0b1<<(LD6_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
+  STR     R5, [R4]                  @
+
 
   LDR   R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
 
+  // Reset current led to 1
+      LDR   R4, =currentLED
+LDR     r5, =1
+str  r5, [r4]
+  // change the highlighted led
+  
+  // increase game speed
+  // make sure the game runs again
+
   @ Return from interrupt handler
   POP  {R0-R12,PC}
 
+LightsOff:
+  PUSH {R4-r12,LR}
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD3_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD5_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD7_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD9_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD10_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD8_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD6_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+   LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  LDR     R6, =0XFFFFFFFE
+  LDR     R7, =LD4_PIN
+  LDR     R8, =32
+  SUB     R7, R8, R7
+  ROR     R6, R7
+  AND     R5, R6
+  STR     R5, [R4]                  @
+POP {R4-r12,PC}
 
+
+CloseGame:
+// code to quit here
+  push {r4-r12,lr}
+.LRedLED:  
+ bl LightsOff
+                        @ if lost flash red and repeat level 
+  LDR     R4, =GPIOE_ODR            @   Invert LD3
+  LDR     R5, [R4]                  @
+  ORR     R5, #(0b1<<(LD10_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  STR     R5, [R4]                  @
+  
+  LDR     R4, =GPIOE_ODR            @   Invert LD10
+  LDR     R5, [R4]                  @
+  ORR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD10_PIN);
+  STR     R5, [R4]                  @
+
+  
+  pop {r4-r12,pc}
+  b End_Main
   .section .data
 
 
