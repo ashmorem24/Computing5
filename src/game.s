@@ -534,10 +534,10 @@ EXTI0_IRQHandler:
   MOV     R5, #2
 .lowerBoundGood:
   CMP     R5, #7 
-  BLS     .happy
+  BLS     .LupperBoundGood
   MOV     R5, #7
 
-.happy:
+.LupperBoundGood:
   LDR     R6, =current_highlighted_LED
   STR     R5, [R6]
 
