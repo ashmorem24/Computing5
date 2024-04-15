@@ -120,6 +120,12 @@ Main:
   STR     R5, [R4]                    @ Write 
  
   @ Prepare external interrupt Line 0 (USER pushbutton)
+  @ We'll count the number of times the button is pressed
+
+  @ Initialise count to zero
+  LDR     R4, =button_count             @ count = 0;
+  MOV     R5, #0                        @
+  STR     R5, [R4]                      @
 
   LDR     R4, =game_speed_countdown
   MOV     R5, #500
@@ -486,6 +492,12 @@ EXTI0_IRQHandler:
   ORR     R5, #(0b1<<(LD6_PIN))          @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD6_PIN);
   STR     R5, [R4]                       @
 
+  @ Count of buttons pressed indicating win
+  LDR     R4, =button_count
+  LDR     R5, [R4]
+  ADD     R5, R5, #1
+  STR     R5, [R4]
+
   CMP     R5, #10
   BGE     WinCondition
 
@@ -728,6 +740,10 @@ WinCondition:
   B       End_Main
 
   .section .data
+
+
+button_count:
+  .space  4
 
 blink_countdown:
   .space  4
