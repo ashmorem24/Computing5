@@ -22,7 +22,7 @@ should toggleLED be a subroutine? or should we just remove interface??????? and 
 @ 
 @ 
 delay:
-  PUSH    {R0-R12, LR}
+  PUSH    {R4-R6, LR}
   LDR     R4, =ignore_delay
   LDR     R5, =1
   STR     R5, [R4]
@@ -35,7 +35,7 @@ delay:
   LDR     R4, =ignore_delay
   LDR     R5, =0
   STR     R5, [R4]
-  POP     {R0-R12, PC}
+  POP     {R4-R6, PC}
 
 Main:
   PUSH    {R4-R5,LR}
@@ -201,7 +201,7 @@ End_Main:
   .type  SysTick_Handler, %function
 SysTick_Handler:
 
-  PUSH    {R0-R12, LR}
+  PUSH    {R4-R7, LR}
 
   LDR     R4, =ignore_delay
   LDR     R5, [R4]
@@ -323,7 +323,7 @@ SysTick_Handler:
   STR     R5, [R4]                       @
 
   @ Return from interrupt handler
-  POP     {R0-R12, PC}
+  POP     {R4-R7, PC}
 
 @ ToggleLed Subroutine
 @ Toggle desired LED on, depending on which value is called from SysTick_Handler
@@ -469,7 +469,7 @@ ToggleLed:
 @
   .type  EXTI0_IRQHandler, %function
 EXTI0_IRQHandler:
-  PUSH    {R0-R12,LR}
+  PUSH    {R4-R7,LR}
 
   LDR     R4, =currentLED
   LDR     R5, [R4]
@@ -604,7 +604,7 @@ EXTI0_IRQHandler:
 
 
   @ Return from interrupt handler
-  POP     {R0-R12,PC}
+  POP     {R4-R7,PC}
 
 @ LightsOff Subroutine
 @ Turns off all LEDS 
@@ -613,7 +613,7 @@ EXTI0_IRQHandler:
 @ Return:
 @ 
 LightsOff:
-  PUSH    {R4-r12,LR}
+  PUSH    {R4-R8,LR}
   LDR     R4, =GPIOE_ODR                 @   Invert LD3
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
@@ -628,7 +628,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD5_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -638,7 +637,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD7_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -648,7 +646,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD9_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -658,7 +655,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD10_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -668,7 +664,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD8_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -678,7 +673,6 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD6_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
@@ -688,12 +682,11 @@ LightsOff:
   LDR     R5, [R4]                       @
   LDR     R6, =0XFFFFFFFE
   LDR     R7, =LD4_PIN
-  LDR     R8, =32
   SUB     R7, R8, R7
   ROR     R6, R7
   AND     R5, R6
   STR     R5, [R4]                  
-  POP     {R4-R12,PC}
+  POP     {R4-R8,PC}
 
 @ CloseGame Subroutine
 @ Branches to turn off all LEDS, then toggles LD3 and LD10 which are red LEDS displaying the user has lost 
@@ -704,7 +697,7 @@ LightsOff:
 
 CloseGame:
 @ code to quit here
-  PUSH    {R4-R12,LR}
+  PUSH    {R4-R5,LR}
 .LRedLED:  
   BL      LightsOff
 
@@ -718,7 +711,7 @@ CloseGame:
   ORR     R5, #(0b1<<(LD3_PIN))          @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                       @
 
-  POP     {R4-R12,PC}
+  POP     {R4-R5,PC}
   B       End_Main
 
 
